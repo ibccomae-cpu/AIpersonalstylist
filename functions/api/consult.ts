@@ -16,7 +16,10 @@ interface ProfileData {
 }
 
 function buildPrompt(p: ProfileData): string {
-  return `다음 고객 정보를 분석하여 맞춤 스타일 컨설팅 보고서를 작성해주세요.
+  const now = new Date()
+  const dateStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`
+  return `오늘 날짜: ${dateStr}
+다음 고객 정보를 분석하여 맞춤 스타일 컨설팅 보고서를 작성해주세요.
 
 **고객 프로필**
 - 성별: ${p.gender}
