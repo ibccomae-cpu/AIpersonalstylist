@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 
 interface ProfileData {
@@ -57,6 +57,27 @@ const bodyTypes = [
   { id: '통통형', svg: <svg viewBox="0 0 50 110" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="25" cy="11" r="8"/><path d="M14 20 C8 30,6 44,8 58 C10 66,14 74,16 80 L34 80 C36 74,40 66,42 58 C44 44,42 30,36 20Z" fill="currentColor" fillOpacity="0.2"/><line x1="18" y1="80" x2="15" y2="106"/><line x1="32" y1="80" x2="35" y2="106"/></svg> },
 ]
 
+function ReportContent({ text, isGenerating }: { text: string; isGenerating: boolean }) {
+  const lines = text.split('\n')
+  return (
+    <div className="report-body">
+      {lines.map((line, i) => {
+        if (line.startsWith('## ')) {
+          return <h3 key={i} className="report-heading">{line.slice(3)}</h3>
+        }
+        if (line.startsWith('- ') || line.startsWith('* ')) {
+          const content = line.slice(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          return <li key={i} className="report-li" dangerouslySetInnerHTML={{ __html: content }} />
+        }
+        if (line.trim() === '') return <div key={i} className="report-gap" />
+        const content = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        return <p key={i} className="report-p" dangerouslySetInnerHTML={{ __html: content }} />
+      })}
+      {isGenerating && <span className="cursor-blink">▋</span>}
+    </div>
+  )
+}
+
 export default function App() {
   const [profile, setProfile] = useState<ProfileData>({
     gender: '', age: '', height: '', weight: '',
@@ -64,9 +85,46 @@ export default function App() {
     bodyType: '', style: '',
   })
   const [submitted, setSubmitted] = useState(false)
+  const [report, setReport] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [genError, setGenError] = useState('')
+  const reportRef = useRef<HTMLDivElement>(null)
 
   const update = (field: keyof ProfileData, value: string) =>
     setProfile(prev => ({ ...prev, [field]: value }))
+
+  useEffect(() => {
+    if (!submitted) return
+    setReport('')
+    setGenError('')
+    setIsGenerating(true)
+
+    async function generate() {
+      try {
+        const res = await fetch('/api/consult', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(profile),
+        })
+        if (!res.ok || !res.body) throw new Error('API 요청 실패')
+
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          setReport(prev => prev + decoder.decode(value, { stream: true }))
+          reportRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        }
+      } catch (e) {
+        setGenError('보고서 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      } finally {
+        setIsGenerating(false)
+      }
+    }
+
+    generate()
+  }, [submitted])
 
   const isComplete = Object.values(profile).every(v => v !== '')
 
@@ -80,22 +138,24 @@ export default function App() {
       <div className="stylist-app">
         <header className="app-header">
           <span className="logo-text">✦ AI Personal Stylist</span>
+          <button className="header-reset" onClick={reset}>← 처음으로</button>
         </header>
-        <main className="main-content">
-          <section className="card-section result-section">
-            <div className="result-icon">✦</div>
-            <h2>프로필 완성!</h2>
-            <p className="subtitle">AI가 맞춤 스타일을 분석 중이에요...</p>
+        <main className="report-page">
+          {/* Profile summary */}
+          <section className="profile-card">
+            <div className="profile-card-header">
+              <span className="result-icon">✦</span>
+              <div>
+                <h2>맞춤 스타일 컨설팅 보고서</h2>
+                <p className="subtitle">{profile.gender} · {profile.age}세 · {profile.style} 스타일</p>
+              </div>
+            </div>
             <div className="profile-summary">
               {[
-                { label: '성별', value: profile.gender },
-                { label: '나이 / 키 / 몸무게', value: `${profile.age}세 / ${profile.height}cm / ${profile.weight}kg` },
+                { label: '체형', value: `${profile.bodyType} (${profile.height}cm / ${profile.weight}kg)` },
                 { label: '피부색', value: profile.skinTone },
                 { label: '얼굴형', value: profile.faceShape },
-                { label: '헤어스타일', value: profile.hairStyle },
-                { label: '안경', value: profile.glasses },
-                { label: '체형', value: profile.bodyType },
-                { label: '선호 스타일', value: profile.style },
+                { label: '헤어 / 안경', value: `${profile.hairStyle} / ${profile.glasses}` },
               ].map(({ label, value }) => (
                 <div key={label} className="summary-item">
                   <span>{label}</span>
@@ -103,8 +163,26 @@ export default function App() {
                 </div>
               ))}
             </div>
-            <button className="next-btn" onClick={reset}>다시 시작하기</button>
           </section>
+
+          {/* Report */}
+          <section className="report-section">
+            {isGenerating && !report && (
+              <div className="generating-state">
+                <div className="spinner" />
+                <p>AI 스타일리스트가 분석 중이에요...</p>
+              </div>
+            )}
+            {genError && <div className="error-box">{genError}</div>}
+            {report && <ReportContent text={report} isGenerating={isGenerating} />}
+            <div ref={reportRef} />
+          </section>
+
+          {!isGenerating && (report || genError) && (
+            <button className="submit-btn" style={{ margin: '0 1.2rem 3rem' }} onClick={reset}>
+              처음부터 다시 하기
+            </button>
+          )}
         </main>
       </div>
     )
