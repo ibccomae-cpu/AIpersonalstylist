@@ -51,13 +51,13 @@ export default function App() {
             <h2>안녕하세요!</h2>
             <p className="subtitle">나만을 위한 스타일 추천을 시작해볼게요.<br />먼저 성별을 알려주세요.</p>
             <div className="gender-grid">
-              {['여성', '남성', '논바이너리'].map(g => (
+              {['여성', '남성'].map(g => (
                 <button
                   key={g}
                   className={`gender-btn ${profile.gender === g ? 'selected' : ''}`}
                   onClick={() => update('gender', g)}
                 >
-                  {g === '여성' ? '👩' : g === '남성' ? '👨' : '🧑'}
+                  {g === '여성' ? '👩' : '👨'}
                   <span>{g}</span>
                 </button>
               ))}
