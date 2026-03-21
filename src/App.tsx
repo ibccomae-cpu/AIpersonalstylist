@@ -78,20 +78,56 @@ function ReportContent({ text, isGenerating }: { text: string; isGenerating: boo
   )
 }
 
+async function resizeImage(file: File, maxSize = 1024): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      let w = img.width, h = img.height
+      if (w > maxSize || h > maxSize) {
+        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize }
+        else { w = Math.round(w * maxSize / h); h = maxSize }
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', 0.85))
+    }
+    img.src = url
+  })
+}
+
 export default function App() {
   const [profile, setProfile] = useState<ProfileData>({
     gender: '', age: '', height: '', weight: '',
     skinTone: '', faceShape: '', hairStyle: '', glasses: '',
     bodyType: '', style: '',
   })
+  const [photo, setPhoto] = useState<string | null>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [report, setReport] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [genError, setGenError] = useState('')
   const reportRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const update = (field: keyof ProfileData, value: string) =>
     setProfile(prev => ({ ...prev, [field]: value }))
+
+  const handleImageFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    const resized = await resizeImage(file)
+    setPhoto(resized)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleImageFile(file)
+  }
 
   useEffect(() => {
     if (!submitted) return
@@ -104,7 +140,7 @@ export default function App() {
         const res = await fetch('/api/consult', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(profile),
+          body: JSON.stringify({ ...profile, photo }),
         })
         if (!res.ok) {
           const errText = await res.text()
@@ -134,6 +170,7 @@ export default function App() {
 
   const reset = () => {
     setProfile({ gender: '', age: '', height: '', weight: '', skinTone: '', faceShape: '', hairStyle: '', glasses: '', bodyType: '', style: '' })
+    setPhoto(null)
     setSubmitted(false)
   }
 
@@ -203,6 +240,48 @@ export default function App() {
           <h1>나만의 스타일 프로필</h1>
           <p>아래 항목을 모두 선택하면 맞춤 스타일을 추천해드려요.</p>
         </div>
+
+        {/* 사진 업로드 */}
+        <section className="section-block">
+          <div className="section-header">
+            <span className="section-num">00</span>
+            <h3>사진 <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'rgba(255,255,255,0.35)' }}>(선택)</span></h3>
+          </div>
+          <div
+            className={`photo-drop-zone ${isDragOver ? 'dragover' : ''} ${photo ? 'has-photo' : ''}`}
+            onDragOver={e => { e.preventDefault(); setIsDragOver(true) }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={handleDrop}
+            onClick={() => !photo && fileInputRef.current?.click()}
+          >
+            {photo ? (
+              <div className="photo-preview">
+                <img src={photo} alt="업로드된 사진" />
+                <button className="photo-remove" onClick={e => { e.stopPropagation(); setPhoto(null) }}>✕ 삭제</button>
+              </div>
+            ) : (
+              <div className="photo-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="8" width="34" height="26" rx="4"/>
+                  <circle cx="20" cy="21" r="7"/>
+                  <path d="M14 8 L16 4 L24 4 L26 8"/>
+                </svg>
+                <p>사진을 드래그하거나 클릭하여 업로드</p>
+                <span>AI가 실제 외모를 참고해 더 정확한 조언을 드려요</span>
+              </div>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f) }}
+          />
+          <p className="privacy-notice">
+            🔒 이 사진은 스타일 분석에만 사용되며 서버에 저장되지 않습니다. AI 분석 후 즉시 폐기되며, 제3자에게 공유되지 않습니다.
+          </p>
+        </section>
 
         {/* 성별 */}
         <section className="section-block">

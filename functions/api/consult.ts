@@ -13,6 +13,7 @@ interface ProfileData {
   glasses: string
   bodyType: string
   style: string
+  photo?: string
 }
 
 function buildPrompt(p: ProfileData): string {
@@ -79,8 +80,21 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       model: 'claude-opus-4-6',
       max_tokens: 4096,
       stream: true,
-      system: '당신은 10년 경력의 전문 퍼스널 스타일리스트입니다. 고객의 신체적 특성과 개인 취향을 깊이 분석하여 실용적이고 구체적인 스타일 컨설팅 보고서를 작성합니다. 보고서는 따뜻하고 전문적인 어조로, 즉시 실행 가능한 조언을 담아 작성하세요.',
-      messages: [{ role: 'user', content: buildPrompt(profile) }],
+      system: '당신은 10년 경력의 전문 퍼스널 스타일리스트입니다. 고객의 신체적 특성과 개인 취향을 깊이 분석하여 실용적이고 구체적인 스타일 컨설팅 보고서를 작성합니다. 사진이 제공된 경우 실제 외모를 최대한 참고하세요. 보고서는 따뜻하고 전문적인 어조로, 즉시 실행 가능한 조언을 담아 작성하세요.',
+      messages: [{
+        role: 'user',
+        content: (() => {
+          const parts: Array<{ type: string; [key: string]: unknown }> = []
+          if (profile.photo) {
+            const match = profile.photo.match(/^data:(image\/\w+);base64,(.+)$/)
+            if (match) {
+              parts.push({ type: 'image', source: { type: 'base64', media_type: match[1], data: match[2] } })
+            }
+          }
+          parts.push({ type: 'text', text: buildPrompt(profile) })
+          return parts
+        })(),
+      }],
     }),
   })
 
