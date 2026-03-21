@@ -1,5 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk'
-
 interface Env {
   ANTHROPIC_API_KEY: string
 }
@@ -56,51 +54,78 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context
 
   if (!env.ANTHROPIC_API_KEY) {
-    return new Response(JSON.stringify({ error: 'API key not configured' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return new Response('API key not configured', { status: 500 })
   }
 
   let profile: ProfileData
   try {
     profile = await request.json() as ProfileData
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid request body' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return new Response('Invalid request body', { status: 400 })
   }
 
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
-
-  const stream = client.messages.stream({
-    model: 'claude-opus-4-6',
-    max_tokens: 8192,
-    thinking: { type: 'adaptive' },
-    system: '당신은 10년 경력의 전문 퍼스널 스타일리스트입니다. 고객의 신체적 특성과 개인 취향을 깊이 분석하여 실용적이고 구체적인 스타일 컨설팅 보고서를 작성합니다. 보고서는 따뜻하고 전문적인 어조로, 즉시 실행 가능한 조언을 담아 작성하세요.',
-    messages: [{ role: 'user', content: buildPrompt(profile) }],
-  })
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      const encoder = new TextEncoder()
-      try {
-        for await (const event of stream) {
-          if (
-            event.type === 'content_block_delta' &&
-            event.delta.type === 'text_delta'
-          ) {
-            controller.enqueue(encoder.encode(event.delta.text))
-          }
-        }
-      } catch (err) {
-        controller.error(err)
-      } finally {
-        controller.close()
-      }
+  // Call Anthropic API directly with fetch (more compatible with Cloudflare Workers)
+  const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
     },
+    body: JSON.stringify({
+      model: 'claude-opus-4-6',
+      max_tokens: 4096,
+      stream: true,
+      system: '당신은 10년 경력의 전문 퍼스널 스타일리스트입니다. 고객의 신체적 특성과 개인 취향을 깊이 분석하여 실용적이고 구체적인 스타일 컨설팅 보고서를 작성합니다. 보고서는 따뜻하고 전문적인 어조로, 즉시 실행 가능한 조언을 담아 작성하세요.',
+      messages: [{ role: 'user', content: buildPrompt(profile) }],
+    }),
   })
+
+  if (!anthropicRes.ok || !anthropicRes.body) {
+    const errText = await anthropicRes.text()
+    return new Response(`Anthropic API error ${anthropicRes.status}: ${errText}`, { status: 502 })
+  }
+
+  // Parse SSE stream and forward only text_delta content
+  const { readable, writable } = new TransformStream()
+  const writer = writable.getWriter()
+  const encoder = new TextEncoder()
+  const decoder = new TextDecoder()
+
+  async function processStream() {
+    const reader = anthropicRes.body!.getReader()
+    let buffer = ''
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const data = line.slice(6).trim()
+          if (data === '[DONE]') continue
+          try {
+            const parsed = JSON.parse(data)
+            if (
+              parsed.type === 'content_block_delta' &&
+              parsed.delta?.type === 'text_delta' &&
+              typeof parsed.delta.text === 'string'
+            ) {
+              await writer.write(encoder.encode(parsed.delta.text))
+            }
+          } catch { /* skip malformed lines */ }
+        }
+      }
+    } catch (e) {
+      // Stream interrupted
+    } finally {
+      writer.close()
+    }
+  }
+
+  processStream()
 
   return new Response(readable, {
     headers: { 'Content-Type': 'text/plain; charset=utf-8' },

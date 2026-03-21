@@ -106,7 +106,11 @@ export default function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(profile),
         })
-        if (!res.ok || !res.body) throw new Error('API 요청 실패')
+        if (!res.ok) {
+          const errText = await res.text()
+          throw new Error(`[${res.status}] ${errText}`)
+        }
+        if (!res.body) throw new Error('응답 스트림 없음')
 
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
@@ -117,7 +121,7 @@ export default function App() {
           reportRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
         }
       } catch (e) {
-        setGenError('보고서 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+        setGenError(e instanceof Error ? e.message : '알 수 없는 오류가 발생했습니다.')
       } finally {
         setIsGenerating(false)
       }
