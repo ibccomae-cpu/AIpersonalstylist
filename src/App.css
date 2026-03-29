@@ -84,6 +84,59 @@
   font-weight: 700;
 }
 
+/* Photo section highlight */
+.photo-section {
+  border-color: rgba(201, 169, 110, 0.3);
+  background: rgba(201, 169, 110, 0.04);
+}
+
+.photo-section-top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.photo-section-badge {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #c9a96e;
+  letter-spacing: 0.02em;
+}
+
+.photo-section-optional {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  padding: 0.15rem 0.5rem;
+}
+
+.photo-section-desc {
+  margin: 0;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.7;
+}
+
+.photo-section-desc strong {
+  color: #c9a96e;
+}
+
+.photo-benefits {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.photo-benefits span {
+  font-size: 0.75rem;
+  color: rgba(201, 169, 110, 0.8);
+  background: rgba(201, 169, 110, 0.08);
+  border: 1px solid rgba(201, 169, 110, 0.2);
+  border-radius: 20px;
+  padding: 0.2rem 0.65rem;
+}
+
 /* Photo upload */
 .photo-drop-zone {
   border: 1.5px dashed rgba(255, 255, 255, 0.15);

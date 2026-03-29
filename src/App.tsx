@@ -344,10 +344,19 @@ export default function App() {
         </div>
 
         {/* 사진 업로드 (선택) */}
-        <section className="section-block">
-          <div className="section-header">
-            <span className="section-num">00</span>
-            <h3>사진 <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'rgba(255,255,255,0.35)' }}>(선택 · 업로드 시 헤어스타일 추천 포함)</span></h3>
+        <section className="section-block photo-section">
+          <div className="photo-section-top">
+            <div className="photo-section-badge">📸 사진 업로드</div>
+            <span className="photo-section-optional">선택</span>
+          </div>
+          <p className="photo-section-desc">
+            사진을 올리면 AI가 실제 외모를 직접 분석해<br />
+            <strong>더 정확한 스타일 제안 + 헤어스타일 9가지</strong>를 함께 추천해드려요
+          </p>
+          <div className="photo-benefits">
+            <span>✦ 퍼스널컬러 정밀 분석</span>
+            <span>✦ 실제 얼굴형 기반 추천</span>
+            <span>✦ 헤어스타일 9종 추가 제공</span>
           </div>
           <div
             className={`photo-drop-zone ${isDragOver ? 'dragover' : ''} ${photo ? 'has-photo' : ''}`}
@@ -363,13 +372,13 @@ export default function App() {
               </div>
             ) : (
               <div className="photo-placeholder">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <svg width="44" height="44" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <rect x="3" y="8" width="34" height="26" rx="4"/>
                   <circle cx="20" cy="21" r="7"/>
                   <path d="M14 8 L16 4 L24 4 L26 8"/>
                 </svg>
-                <p>사진을 드래그하거나 클릭하여 업로드</p>
-                <span>정면 사진 업로드 시 헤어스타일 9가지도 함께 추천해드려요</span>
+                <p>클릭하거나 사진을 드래그하세요</p>
+                <span>정면 사진일수록 더 정확해요</span>
               </div>
             )}
           </div>
