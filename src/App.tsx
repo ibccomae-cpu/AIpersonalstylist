@@ -389,9 +389,14 @@ export default function App() {
             style={{ display: 'none' }}
             onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f) }}
           />
-          <p className="privacy-notice">
-            🔒 이 사진은 스타일 분석에만 사용되며 서버에 저장되지 않습니다. AI 분석 후 즉시 폐기되며, 제3자에게 공유되지 않습니다.
-          </p>
+          <div className="privacy-box">
+            <div className="privacy-box-title">🔒 개인정보 보호 안내</div>
+            <div className="privacy-box-items">
+              <div className="privacy-item">✓ 사진은 AI 분석 목적으로만 사용됩니다</div>
+              <div className="privacy-item">✓ 서버에 저장되지 않으며 분석 즉시 폐기됩니다</div>
+              <div className="privacy-item">✓ 제3자 공유 및 외부 전송 없음</div>
+            </div>
+          </div>
         </section>
 
         {/* 성별 */}

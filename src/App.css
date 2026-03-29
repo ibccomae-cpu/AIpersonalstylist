@@ -209,10 +209,31 @@
 
 .photo-remove:hover { background: rgba(0, 0, 0, 0.85); }
 
-.privacy-notice {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.28);
-  margin: 0;
+.privacy-box {
+  background: rgba(111, 207, 151, 0.07);
+  border: 1px solid rgba(111, 207, 151, 0.25);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.privacy-box-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6fcf97;
+}
+
+.privacy-box-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.privacy-item {
+  font-size: 0.78rem;
+  color: rgba(111, 207, 151, 0.85);
   line-height: 1.5;
 }
 
