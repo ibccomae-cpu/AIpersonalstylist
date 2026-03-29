@@ -22,6 +22,8 @@ interface HairstyleStyle {
   difficulty: string
   mood: string
   tip: string
+  imageKeyword?: string
+  imageUrl?: string
 }
 
 interface HairstyleResult {
@@ -124,10 +126,17 @@ const moodColor: Record<string, string> = {
 function StyleCard({ style, index }: { style: HairstyleStyle; index: number }) {
   return (
     <div className="style-card">
-      <div className="style-card-top">
-        <span className="style-emoji">{style.emoji}</span>
-        <span className="style-index">#{index + 1}</span>
-      </div>
+      {style.imageUrl ? (
+        <div className="style-card-img">
+          <img src={style.imageUrl} alt={style.name} />
+          <span className="style-card-num">#{index + 1}</span>
+        </div>
+      ) : (
+        <div className="style-card-top">
+          <span className="style-emoji">{style.emoji}</span>
+          <span className="style-index">#{index + 1}</span>
+        </div>
+      )}
       <h4 className="style-name">{style.name}</h4>
       <p className="style-desc">{style.description}</p>
       <p className="style-reason">✓ {style.reason}</p>

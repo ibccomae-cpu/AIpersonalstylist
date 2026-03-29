@@ -708,6 +708,34 @@
 
 .style-card:hover { border-color: rgba(201, 169, 110, 0.35); }
 
+.style-card-img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.2rem;
+}
+
+.style-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.style-card-num {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0,0,0,0.55);
+  border-radius: 20px;
+  padding: 0.1rem 0.4rem;
+}
+
 .style-card-top {
   display: flex;
   justify-content: space-between;

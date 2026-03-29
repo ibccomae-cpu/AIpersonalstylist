@@ -1,5 +1,6 @@
 interface Env {
   ANTHROPIC_API_KEY: string
+  PEXELS_API_KEY?: string
 }
 
 interface HairstyleStyle {
@@ -10,11 +11,25 @@ interface HairstyleStyle {
   difficulty: string
   mood: string
   tip: string
+  imageKeyword: string
+  imageUrl?: string
 }
 
 interface HairstyleResult {
   faceAnalysis: string
   styles: HairstyleStyle[]
+}
+
+async function fetchPexelsImage(keyword: string, apiKey: string): Promise<string | null> {
+  try {
+    const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=1&orientation=portrait`
+    const res = await fetch(url, { headers: { Authorization: apiKey } })
+    if (!res.ok) return null
+    const data = await res.json() as { photos: Array<{ src: { medium: string } }> }
+    return data.photos[0]?.src?.medium || null
+  } catch {
+    return null
+  }
 }
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
@@ -55,13 +70,15 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       "reason": "이 얼굴에 어울리는 이유 (1문장)",
       "difficulty": "쉬움",
       "mood": "캐주얼",
-      "tip": "스타일링 팁 (1문장)"
+      "tip": "스타일링 팁 (1문장)",
+      "imageKeyword": "English search keyword for this hairstyle style (e.g. 'korean bob haircut woman', 'long wavy hair asian')"
     }
   ]
 }
 
 difficulty는 반드시 쉬움/보통/어려움 중 하나.
 mood는 반드시 캐주얼/포멀/트렌디/클래식/청순/시크 중 하나.
+imageKeyword는 Pexels 이미지 검색에 쓸 영문 키워드 (구체적이고 사실적인 헤어스타일 사진이 나오도록).
 styles 배열에 정확히 9개의 스타일을 포함하세요.`
 
   const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -77,10 +94,7 @@ styles 배열에 정확히 9개의 스타일을 포함하세요.`
       messages: [{
         role: 'user',
         content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: mediaType, data: base64Data }
-          },
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
           { type: 'text', text: prompt }
         ]
       }]
@@ -92,17 +106,27 @@ styles 배열에 정확히 9개의 스타일을 포함하세요.`
     return new Response(JSON.stringify({ error: `Claude API 오류: ${err}` }), { status: anthropicRes.status })
   }
 
-  const data = await anthropicRes.json() as { content: Array<{ type: string; text: string }> }
-  const text = data.content[0]?.text || ''
+  const claudeData = await anthropicRes.json() as { content: Array<{ type: string; text: string }> }
+  const text = claudeData.content[0]?.text || ''
 
+  let parsed: HairstyleResult
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('JSON을 찾을 수 없습니다')
-    const parsed: HairstyleResult = JSON.parse(jsonMatch[0])
-    return new Response(JSON.stringify(parsed), {
-      headers: { 'content-type': 'application/json' }
-    })
+    parsed = JSON.parse(jsonMatch[0])
   } catch {
     return new Response(JSON.stringify({ error: 'AI 응답 파싱 실패', raw: text }), { status: 500 })
   }
+
+  // Fetch Pexels images in parallel if API key is available
+  if (env.PEXELS_API_KEY) {
+    const imageUrls = await Promise.all(
+      parsed.styles.map(s => fetchPexelsImage(s.imageKeyword, env.PEXELS_API_KEY!))
+    )
+    parsed.styles = parsed.styles.map((s, i) => ({ ...s, imageUrl: imageUrls[i] || undefined }))
+  }
+
+  return new Response(JSON.stringify(parsed), {
+    headers: { 'content-type': 'application/json' }
+  })
 }
