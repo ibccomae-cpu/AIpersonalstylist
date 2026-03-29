@@ -28,15 +28,15 @@ function buildPrompt(p: ProfileData): string {
 ${photoInstruction}다음 고객 정보를 분석하여 맞춤 스타일 컨설팅 보고서를 작성해주세요.
 
 **고객 프로필** (사진이 있는 경우 프로필보다 사진 분석을 우선시하세요)
-- 성별: ${p.gender}
-- 나이: ${p.age}세
-- 키 / 몸무게: ${p.height}cm / ${p.weight}kg
-- 피부색: ${p.skinTone}
-- 얼굴형: ${p.faceShape}
-- 헤어스타일: ${p.hairStyle}
-- 안경: ${p.glasses}
-- 체형: ${p.bodyType}
-- 선호 스타일: ${p.style}
+${p.gender ? `- 성별: ${p.gender}` : ''}
+${p.age ? `- 나이: ${p.age}세` : ''}
+${(p.height || p.weight) ? `- 키 / 몸무게: ${p.height ? p.height + 'cm' : '미입력'} / ${p.weight ? p.weight + 'kg' : '미입력'}` : ''}
+${p.skinTone ? `- 피부색: ${p.skinTone}` : ''}
+${p.faceShape ? `- 얼굴형: ${p.faceShape}` : ''}
+${p.hairStyle ? `- 헤어스타일: ${p.hairStyle}` : ''}
+${p.glasses ? `- 안경: ${p.glasses}` : ''}
+${p.bodyType ? `- 체형: ${p.bodyType}` : ''}
+${p.style ? `- 선호 스타일: ${p.style}` : ''}
 
 아래 구조로 보고서를 작성해주세요:
 

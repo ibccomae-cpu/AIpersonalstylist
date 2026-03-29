@@ -236,7 +236,8 @@ export default function App() {
     fetchHairstyle()
   }, [submitted])
 
-  const isComplete = Object.values(profile).every(v => v !== '')
+  const profileComplete = Object.values(profile).every(v => v !== '')
+  const isComplete = !!photo || profileComplete
 
   const reset = () => {
     setProfile({ gender: '', age: '', height: '', weight: '', skinTone: '', faceShape: '', hairStyle: '', glasses: '', bodyType: '', style: '' })
@@ -340,14 +341,14 @@ export default function App() {
       <main className="single-page">
         <div className="page-intro">
           <h1>나만의 스타일 프로필</h1>
-          <p>아래 항목을 모두 선택하면 맞춤 스타일을 추천해드려요.</p>
+          <p>사진만 올려도 바로 분석할 수 있어요.<br />추가 정보를 입력할수록 더 정확해져요.</p>
         </div>
 
         {/* 사진 업로드 (선택) */}
         <section className="section-block photo-section">
           <div className="photo-section-top">
             <div className="photo-section-badge">📸 사진 업로드</div>
-            <span className="photo-section-optional">선택</span>
+            <span className="photo-section-optional">사진만으로 바로 분석 가능</span>
           </div>
           <p className="photo-section-desc">
             사진을 올리면 AI가 실제 외모를 직접 분석해<br />
@@ -404,6 +405,7 @@ export default function App() {
           <div className="section-header">
             <span className="section-num">01</span>
             <h3>성별</h3>
+            {photo && <span className="section-optional">선택</span>}
           </div>
           <div className="gender-grid">
             {[{ id: '여성', icon: '👩' }, { id: '남성', icon: '👨' }].map(({ id, icon }) => (
@@ -420,6 +422,7 @@ export default function App() {
           <div className="section-header">
             <span className="section-num">02</span>
             <h3>기본 정보</h3>
+            {photo && <span className="section-optional">선택</span>}
           </div>
           <div className="info-row">
             {[
@@ -443,6 +446,7 @@ export default function App() {
           <div className="section-header">
             <span className="section-num">03</span>
             <h3>피부색</h3>
+            {photo && <span className="section-optional">선택</span>}
           </div>
           <div className="skin-grid">
             {[
@@ -466,6 +470,7 @@ export default function App() {
           <div className="section-header">
             <span className="section-num">04</span>
             <h3>얼굴형</h3>
+            {photo && <span className="section-optional">선택</span>}
           </div>
           <div className="visual-grid">
             {faceShapes.map(({ id, svg }) => (
@@ -479,6 +484,7 @@ export default function App() {
           <div className="section-header">
             <span className="section-num">05</span>
             <h3>헤어스타일</h3>
+            {photo && <span className="section-optional">선택</span>}
           </div>
           <div className="visual-grid">
             {hairStyles.map(({ id, svg }) => (
@@ -492,6 +498,7 @@ export default function App() {
           <div className="section-header">
             <span className="section-num">06</span>
             <h3>안경</h3>
+            {photo && <span className="section-optional">선택</span>}
           </div>
           <div className="visual-grid">
             {glassesOptions.map(({ id, svg }) => (
@@ -505,6 +512,7 @@ export default function App() {
           <div className="section-header">
             <span className="section-num">07</span>
             <h3>체형</h3>
+            {photo && <span className="section-optional">선택</span>}
           </div>
           <div className="visual-grid">
             {bodyTypes.map(({ id, svg }) => (
@@ -518,6 +526,7 @@ export default function App() {
           <div className="section-header">
             <span className="section-num">08</span>
             <h3>선호 스타일</h3>
+            {photo && <span className="section-optional">선택</span>}
           </div>
           <div className="option-grid">
             {[
@@ -537,7 +546,8 @@ export default function App() {
         </section>
 
         <div className="submit-area">
-          {!isComplete && <p className="submit-hint">모든 항목을 선택해주세요</p>}
+          {!isComplete && <p className="submit-hint">사진을 올리거나 모든 항목을 선택해주세요</p>}
+          {photo && !profileComplete && <p className="submit-hint-ok">📸 사진만으로도 분석할 수 있어요</p>}
           <button className="submit-btn" disabled={!isComplete} onClick={() => setSubmitted(true)}>
             스타일 추천 받기 →
           </button>

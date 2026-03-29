@@ -441,6 +441,21 @@
   margin: 0;
 }
 
+.submit-hint-ok {
+  font-size: 0.82rem;
+  color: #6fcf97;
+  margin: 0;
+}
+
+.section-optional {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 0.15rem 0.5rem;
+  margin-left: auto;
+}
+
 .submit-btn {
   width: 100%;
   padding: 1rem;
