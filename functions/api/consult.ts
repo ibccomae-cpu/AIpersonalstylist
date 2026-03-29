@@ -19,10 +19,15 @@ interface ProfileData {
 function buildPrompt(p: ProfileData): string {
   const now = new Date()
   const dateStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`
-  return `오늘 날짜: ${dateStr}
-다음 고객 정보를 분석하여 맞춤 스타일 컨설팅 보고서를 작성해주세요.
 
-**고객 프로필**
+  const photoInstruction = p.photo
+    ? `⚑ 첨부된 사진을 가장 먼저 꼼꼼히 분석하세요. 사진에서 직접 확인되는 피부색, 얼굴형, 이목구비 비율, 체형, 전체적인 분위기를 최우선으로 반영하여 스타일을 제안해야 합니다. 아래 고객이 직접 입력한 프로필 정보는 보조 참고 자료로만 활용하세요.\n\n`
+    : ''
+
+  return `오늘 날짜: ${dateStr}
+${photoInstruction}다음 고객 정보를 분석하여 맞춤 스타일 컨설팅 보고서를 작성해주세요.
+
+**고객 프로필** (사진이 있는 경우 프로필보다 사진 분석을 우선시하세요)
 - 성별: ${p.gender}
 - 나이: ${p.age}세
 - 키 / 몸무게: ${p.height}cm / ${p.weight}kg
@@ -80,7 +85,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       model: 'claude-opus-4-6',
       max_tokens: 4096,
       stream: true,
-      system: '당신은 10년 경력의 전문 퍼스널 스타일리스트입니다. 고객의 신체적 특성과 개인 취향을 깊이 분석하여 실용적이고 구체적인 스타일 컨설팅 보고서를 작성합니다. 사진이 제공된 경우 실제 외모를 최대한 참고하세요. 보고서는 따뜻하고 전문적인 어조로, 즉시 실행 가능한 조언을 담아 작성하세요.',
+      system: '당신은 10년 경력의 전문 퍼스널 스타일리스트입니다. 고객 사진이 첨부된 경우, 반드시 사진을 가장 먼저 세밀하게 분석하여 실제 외모(피부색, 얼굴형, 체형, 분위기 등)를 최우선으로 반영해야 합니다. 텍스트 프로필은 보조 자료로만 사용하세요. 사진 없이 프로필만 있는 경우에는 입력된 정보를 최대한 활용합니다. 보고서는 따뜻하고 전문적인 어조로, 즉시 실행 가능한 구체적인 조언을 담아 작성하세요.',
       messages: [{
         role: 'user',
         content: (() => {
