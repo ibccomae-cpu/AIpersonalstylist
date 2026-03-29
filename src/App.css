@@ -736,6 +736,62 @@
   padding: 0.1rem 0.4rem;
 }
 
+.style-ref-label {
+  position: absolute;
+  bottom: 0.4rem;
+  left: 0.4rem;
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.7);
+  background: rgba(0,0,0,0.5);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+}
+
+/* Original photo row */
+.original-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  background: rgba(201, 169, 110, 0.07);
+  border: 1px solid rgba(201, 169, 110, 0.2);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+}
+
+.original-photo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.original-photo-wrap img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #c9a96e;
+}
+
+.original-photo-label {
+  font-size: 0.65rem;
+  color: #c9a96e;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.original-photo-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.7;
+}
+
+.original-photo-note strong {
+  color: rgba(255,255,255,0.85);
+}
+
 .style-card-top {
   display: flex;
   justify-content: space-between;

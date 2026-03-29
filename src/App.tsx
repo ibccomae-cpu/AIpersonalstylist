@@ -130,6 +130,7 @@ function StyleCard({ style, index }: { style: HairstyleStyle; index: number }) {
         <div className="style-card-img">
           <img src={style.imageUrl} alt={style.name} />
           <span className="style-card-num">#{index + 1}</span>
+          <span className="style-ref-label">참고 사진</span>
         </div>
       ) : (
         <div className="style-card-top">
@@ -321,6 +322,20 @@ export default function App() {
               {hairstyle && (
                 <>
                   <p className="face-analysis">{hairstyle.faceAnalysis}</p>
+
+                  {/* 원본 사진 고정 표시 */}
+                  <div className="original-photo-row">
+                    <div className="original-photo-wrap">
+                      <img src={photo} alt="원본 사진" />
+                      <span className="original-photo-label">내 사진 (원본 유지)</span>
+                    </div>
+                    <p className="original-photo-note">
+                      아래 9가지는 <strong>참고 스타일 사진</strong>이에요.<br />
+                      실제 얼굴·체형은 절대 변경되지 않으며,<br />
+                      어떤 스타일이 어울릴지 참고용으로만 제공됩니다.
+                    </p>
+                  </div>
+
                   <div className="hairstyle-grid">
                     {hairstyle.styles.slice(0, 9).map((style, i) => (
                       <StyleCard key={i} style={style} index={i} />
